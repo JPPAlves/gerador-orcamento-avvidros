@@ -4,12 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Orçamento - AV Comércio de Vidros</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563EB'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/></svg>" type="image/svg+xml">    <!-- Tailwind CSS para responsividade e estilos rápidos -->
+    
+    <!-- Ícone da Aba do Navegador -->
+    <link rel="icon" href="logo.png" type="image/png">
+
+    <!-- Tailwind CSS para responsividade e estilos rápidos -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- html2pdf para gerar o PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
-        /* Estilos específicos para o documento do PDF */
+        /* ====================================================================
+           ESTILOS FIXOS DO PDF (Isso garante que não quebre na hora de exportar)
+           ==================================================================== */
         #pdf-content {
             font-family: Arial, sans-serif;
             color: #333;
@@ -30,34 +37,106 @@
             flex-direction: column;
         }
 
+        /* Estrutura do Cabeçalho Segura para PDF */
+        .pdf-header-fixo {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        .pdf-logo-fixo {
+            width: 180px;
+            height: 100px;
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .pdf-logo-fixo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .pdf-empresa-fixo {
+            flex: 1;
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+        .pdf-empresa-fixo h2 {
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+            margin: 0 0 5px 0;
+        }
+        .pdf-empresa-fixo p { margin: 0; }
+
+        /* Titulo Orçamento */
+        .pdf-titulo-fixo {
+            border-bottom: 2px solid #9ca3af;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            font-size: 26px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Dados do Cliente Seguros para PDF */
+        .pdf-cliente-fixo {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            font-size: 15px;
+            line-height: 1.6;
+            width: 100%;
+        }
+        .pdf-cliente-coluna { width: 48%; }
+        .pdf-cliente-coluna p { margin: 0; }
+
+        /* Tabela Segura para PDF */
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
         .pdf-table th {
             background-color: #f3f4f6;
             text-align: left;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #d1d5db;
             font-weight: bold;
+            font-size: 14px;
         }
         .pdf-table td {
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #d1d5db;
+            font-size: 14px;
         }
         
-        /* Classe que o html2pdf usa para forçar a quebra de página */
+        /* Rodapé de Valores Seguro para PDF */
+        .pdf-totais-fixo {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            background-color: #f9fafb;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .pdf-totais-col1 { width: 60%; }
+        .pdf-totais-col2 { width: 35%; text-align: right; }
+        .pdf-totais-fixo p { margin: 0 0 5px 0; }
+        
         .quebra-pagina {
             page-break-before: always;
             margin-top: 20mm;
         }
 
-        /* Garantir que a tela do PDF se adapte no mobile apenas para visualização */
+        /* Responsividade para a tela (não afeta o PDF) */
         @media screen and (max-width: 768px) {
-            .preview-container {
-                overflow-x: auto;
-            }
-            #pdf-content {
-                width: 800px;
-                min-height: auto;
-                padding: 10mm;
-            }
+            .preview-container { overflow-x: auto; }
+            #pdf-content { width: 800px; min-height: auto; padding: 10mm; }
         }
     </style>
 </head>
@@ -125,18 +204,19 @@
         <!-- Área de Visualização do PDF -->
         <div class="w-full xl:w-2/3 preview-container">
             <div class="shadow-lg border" id="pdf-wrapper">
-                <!-- Este é o contêiner que será convertido em PDF -->
+                
+                <!-- ESTE É O CONTEÚDO QUE VAI PARA O PDF (Totalmente reestruturado) -->
                 <div id="pdf-content">
-                    
                     <div class="pdf-main-content">
-                        <!-- Cabeçalho -->
-                        <div class="flex items-center gap-4 mb-8 w-full overflow-hidden">
-                            <div class="w-48 h-28 flex-shrink-0 flex justify-start items-center">
-                                <!-- Imagem da Logo Aqui -->
-                                <img src="logo.png" alt="Logo Empresa" class="max-w-full max-h-full object-contain">
+                        
+                        <!-- Cabeçalho Fixo -->
+                        <div class="pdf-header-fixo">
+                            <div class="pdf-logo-fixo">
+                                <!-- Certifique-se que o arquivo chama "logo.png" no GitHub -->
+                                <img src="logo.png" alt="Logo Empresa" onerror="this.style.display='none'">
                             </div>
-                            <div class="text-gray-600 text-[14px] leading-snug tracking-wide flex-1">
-                                <p class="font-bold text-xl text-black mb-1">AV COMERCIO DE VIDROS LTDA</p>
+                            <div class="pdf-empresa-fixo">
+                                <h2>AV COMERCIO DE VIDROS LTDA</h2>
                                 <p>CNPJ: 44.610.589/0001-15</p>
                                 <p>AVENIDA JATUARANA, 3634, SALA B, CONCEICAO, PORTO VELHO, RO</p>
                                 <p>CEP: 76808-426 | (69) 99325-1999 | Avvidrospvh@gmail.com</p>
@@ -144,49 +224,49 @@
                         </div>
 
                         <!-- Título do Orçamento -->
-                        <div class="border-b-2 border-gray-400 pb-2 mb-4">
-                            <h1 class="text-3xl font-bold uppercase tracking-wide">Orçamento</h1>
+                        <div class="pdf-titulo-fixo">
+                            Orçamento
                         </div>
 
-                        <!-- Dados do Cliente Lado a Lado -->
-                        <div class="mb-6 flex flex-row justify-between gap-4 text-base leading-relaxed">
-                            <div class="w-1/2">
+                        <!-- Dados do Cliente Fixo -->
+                        <div class="pdf-cliente-fixo">
+                            <div class="pdf-cliente-coluna">
                                 <p><strong>Data:</strong> <span id="prev-data"></span></p>
                                 <p><strong>Cliente:</strong> <span id="prev-cliente-nome">Nome do Cliente</span></p>
                                 <p><strong>CNPJ/CPF:</strong> <span id="prev-cliente-cnpj">000.000.000-00</span></p>
                             </div>
-                            <div class="w-1/2">
+                            <div class="pdf-cliente-coluna">
                                 <p><strong>Contato:</strong> <span id="prev-cliente-telefone">Telefone de Contato</span></p>
                                 <p><strong>Endereço:</strong> <span id="prev-cliente-endereco">Endereço Completo</span></p>
                             </div>
                         </div>
                         
-                        <p class="mb-4">Aqui está o orçamento conforme solicitado:</p>
+                        <p style="margin-bottom: 15px;">Aqui está o orçamento conforme solicitado:</p>
 
                         <!-- Contêiner Dinâmico para as Tabelas -->
                         <div id="dynamic-tables-container">
                             <!-- Tabelas serão injetadas via JS -->
                         </div>
 
-                        <!-- Rodapé de Valores -->
-                        <div class="flex justify-between mt-6 bg-gray-50 p-4 border border-gray-200 rounded">
-                            <div class="w-2/3 pr-4">
-                                <p class="mb-1"><strong>Condições de pagamento:</strong> <span id="prev-condicoes">À vista</span></p>
-                                <p><strong>Formas de pagamento:</strong> <span id="prev-formas">PIX, Dinheiro, Cartão de Débito</span></p>
+                        <!-- Rodapé de Valores Fixo -->
+                        <div class="pdf-totais-fixo">
+                            <div class="pdf-totais-col1">
+                                <p><strong>Condições de pagamento:</strong> <span id="prev-condicoes">À vista</span></p>
+                                <p><strong>Formas de pagamento:</strong> <span id="prev-formas">PIX, Dinheiro</span></p>
                             </div>
-                            <div class="text-right w-1/3">
-                                <p class="mb-1 text-lg"><strong>Valor total:</strong> <span id="prev-total">R$ 0,00</span></p>
-                                <p class="text-xl font-bold text-gray-900 mt-2 border-t pt-2 border-gray-300">Valor final: <span id="prev-final">R$ 0,00</span></p>
+                            <div class="pdf-totais-col2">
+                                <p style="font-size: 16px;"><strong>Valor total:</strong> <span id="prev-total">R$ 0,00</span></p>
+                                <p style="font-size: 18px; font-weight: bold; border-top: 1px solid #d1d5db; padding-top: 8px; margin-top: 8px;">Valor final: <span id="prev-final">R$ 0,00</span></p>
                             </div>
                         </div>
 
-                        <!-- Paginação no final da página (mt-auto empurra pro fim) -->
-                        <div class="mt-auto text-right text-gray-500 text-sm w-full pt-8 pb-2">
+                        <!-- Paginação -->
+                        <div style="margin-top: auto; text-align: right; color: #6b7280; font-size: 14px; padding-top: 30px;">
                             <span id="prev-page-num">Página 1/1</span>
                         </div>
                     </div>
-
                 </div>
+
             </div>
         </div>
 
@@ -300,7 +380,7 @@
             updatePreview();
         }
 
-        // --- ATUALIZAÇÃO DA PRÉVIA COM QUEBRA DE PÁGINA ---
+        // --- ATUALIZAÇÃO DA PRÉVIA ---
         function updatePreview() {
             // Atualizar data
             const rawDate = document.getElementById('input-data').value;
@@ -311,7 +391,7 @@
                 document.getElementById('prev-data').innerText = dataObj.toLocaleDateString('pt-BR', opcoes);
             }
 
-            // Atualizar dados do cliente na prévia (com fallback caso esteja vazio)
+            // Atualizar dados do cliente na prévia
             const nomeCliente = document.getElementById('input-cliente').value || 'Nome do Cliente';
             const cnpjCliente = document.getElementById('input-cnpj-cliente').value || '000.000.000-00';
             const telefoneCliente = document.getElementById('input-telefone-cliente').value || 'Telefone de Contato';
@@ -331,11 +411,9 @@
             containerTabelas.innerHTML = ''; 
             let totalGeral = 0;
             
-            // Cálculo do total de páginas
             const totalPaginas = Math.max(1, Math.ceil(items.length / ITEMS_POR_PAGINA));
             document.getElementById('prev-page-num').innerText = `Página ${totalPaginas}/${totalPaginas}`;
 
-            // Divide os itens em blocos de até 10
             for (let i = 0; i < items.length; i += ITEMS_POR_PAGINA) {
                 const loteItens = items.slice(i, i + ITEMS_POR_PAGINA);
                 const isPrimeiraPagina = i === 0;
@@ -347,27 +425,27 @@
                     
                     linhasHTML += `
                         <tr>
-                            <td class="font-semibold text-sm">${item.descricao || 'Item sem descrição'}</td>
-                            <td class="text-sm">${formatMoney(item.valor)}</td>
-                            <td class="text-sm">${item.qtd} ${item.unidade}</td>
-                            <td class="text-sm">${formatMoney(totalItem)}</td>
+                            <td style="font-weight: bold;">${item.descricao || 'Item sem descrição'}</td>
+                            <td>${formatMoney(item.valor)}</td>
+                            <td>${item.qtd} ${item.unidade}</td>
+                            <td>${formatMoney(totalItem)}</td>
                         </tr>
                     `;
                 });
 
                 const classeQuebra = isPrimeiraPagina ? '' : 'quebra-pagina';
-                const textoContinuacao = isPrimeiraPagina ? '' : '<p class="text-xs text-gray-500 mb-1 italic">Continuação dos itens...</p>';
+                const textoContinuacao = isPrimeiraPagina ? '' : '<p style="font-size: 12px; color: #6b7280; font-style: italic; margin-bottom: 5px;">Continuação dos itens...</p>';
 
                 containerTabelas.innerHTML += `
                     <div class="${classeQuebra}">
                         ${textoContinuacao}
-                        <table class="w-full pdf-table mb-6 border-collapse">
+                        <table class="pdf-table">
                             <thead>
                                 <tr>
-                                    <th class="w-1/2 text-sm">DESCRIÇÃO</th>
-                                    <th class="w-1/6 text-sm">VALOR</th>
-                                    <th class="w-1/6 text-sm">QTD</th>
-                                    <th class="w-1/6 text-sm">TOTAL</th>
+                                    <th style="width: 50%;">DESCRIÇÃO</th>
+                                    <th style="width: 16%;">VALOR</th>
+                                    <th style="width: 16%;">QTD</th>
+                                    <th style="width: 16%;">TOTAL</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -378,18 +456,16 @@
                 `;
             }
 
-            // Atualizar Totais Finais
             document.getElementById('prev-total').innerText = formatMoney(totalGeral);
             document.getElementById('prev-final').innerText = formatMoney(totalGeral);
         }
 
-        // --- GERAÇÃO DO PDF COM TRATAMENTO DE ERRO ---
+        // --- GERAÇÃO DO PDF ---
         function generatePDF() {
             const element = document.getElementById('pdf-content');
             const nomeCliente = document.getElementById('input-cliente').value || 'Cliente';
             const btn = document.getElementById('btn-exportar');
             
-            // Efeito visual no botão enquanto gera
             btn.innerText = "⏳ Gerando PDF...";
             btn.disabled = true;
             btn.classList.replace('bg-blue-600', 'bg-gray-400');
@@ -403,14 +479,12 @@
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Gera e salva. Se falhar no computador local por causa da imagem, avisa o usuário.
             html2pdf().set(opt).from(element).save().then(() => {
                 btn.innerText = "📄 Exportar para PDF";
                 btn.disabled = false;
                 btn.classList.replace('bg-gray-400', 'bg-blue-600');
             }).catch(err => {
                 console.error(err);
-                alert("Erro ao gerar o PDF. Se você estiver abrindo o arquivo direto do seu computador, o navegador bloqueia a leitura da logo (CORS). Isso será resolvido automaticamente quando você hospedar o site no GitHub!");
                 btn.innerText = "📄 Exportar para PDF";
                 btn.disabled = false;
                 btn.classList.replace('bg-gray-400', 'bg-blue-600');
