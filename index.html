@@ -256,7 +256,7 @@
 
     <script>
         let items = [
-            { descricao: 'Vidro incolor 6 mm', valor: 0.00, qtd: 1, unidade: 'un' }
+            { descricao: '', valor: 0.00, qtd: 1, unidade: 'un' }
         ];
 
         const opcoesCondicoes = ['À vista', 'A prazo (15 dias)', 'A prazo (30 dias)', '50% Entrada + 50% Fim'];
@@ -285,13 +285,26 @@
             items.forEach((item, index) => {
                 container.innerHTML += `
                     <div class="bg-gray-50 p-3 rounded border border-gray-200 relative shadow-sm">
-                        <button onclick="removeItem(${index})" class="absolute top-2 right-2 text-red-500 font-bold text-sm bg-red-100 px-2 rounded hover:bg-red-200">X</button>
+                        <button onclick="removeItem(${index})" class="absolute top-2 right-2 text-red-500 font-bold text-sm bg-red-100 px-2 rounded hover:bg-red-200" title="Remover Item">X</button>
                         <p class="text-xs text-gray-500 font-bold mb-1">Item ${index + 1}</p>
+                        
+                        <!-- Campo de Descrição -->
                         <input type="text" placeholder="Ex: Vidro temperado 8mm" value="${item.descricao}" oninput="updateItem(${index}, 'descricao', this.value)" class="w-full border rounded p-2 mb-2 text-sm focus:ring focus:ring-blue-200 outline-none">
+                        
                         <div class="flex gap-2">
-                            <input type="number" placeholder="Valor" value="${item.valor}" oninput="updateItem(${index}, 'valor', this.value)" class="w-1/3 border rounded p-2 text-sm focus:ring focus:ring-blue-200 outline-none">
-                            <input type="number" placeholder="Qtd" value="${item.qtd}" oninput="updateItem(${index}, 'qtd', this.value)" class="w-1/4 border rounded p-2 text-sm focus:ring focus:ring-blue-200 outline-none">
-                            <input type="text" placeholder="Unid." value="${item.unidade}" oninput="updateItem(${index}, 'unidade', this.value)" class="w-1/4 border rounded p-2 text-sm focus:ring focus:ring-blue-200 outline-none">
+                            <!-- CAMPO DE VALOR MELHORADO -->
+                            <div class="relative w-2/5">
+                                <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 font-bold text-sm">R$</span>
+                                </div>
+                                <input type="number" step="0.01" min="0" placeholder="0.00" value="${item.valor}" oninput="updateItem(${index}, 'valor', this.value)" class="w-full border rounded py-2 pl-8 pr-2 text-sm focus:ring focus:ring-blue-200 outline-none" title="Valor Unitário">
+                            </div>
+                            
+                            <!-- Campo de Quantidade -->
+                            <input type="number" placeholder="Qtd" value="${item.qtd}" oninput="updateItem(${index}, 'qtd', this.value)" class="w-1/5 border rounded p-2 text-sm focus:ring focus:ring-blue-200 outline-none" title="Quantidade">
+                            
+                            <!-- Campo de Unidade -->
+                            <input type="text" placeholder="Unid." value="${item.unidade}" oninput="updateItem(${index}, 'unidade', this.value)" class="w-2/5 border rounded p-2 text-sm focus:ring focus:ring-blue-200 outline-none" title="Unidade (ex: un, m², kg)">
                         </div>
                     </div>
                 `;
@@ -415,9 +428,8 @@
             document.getElementById('prev-final').innerText = formatMoney(totalGeral);
         }
 
-        // AGORA USAMOS A FUNÇÃO NATIVA DO NAVEGADOR (100% livre de bugs)
+        // FUNÇÃO DE IMPRESSÃO NATIVA
         function generatePDF() {
-            // Abre a tela de impressão do navegador (onde o usuário escolhe "Salvar como PDF")
             window.print();
         }
     </script>
