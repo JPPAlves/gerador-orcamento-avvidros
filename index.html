@@ -8,68 +8,111 @@
     <!-- Ícone da Aba do Navegador -->
     <link rel="icon" href="logo.png" type="image/png">
 
-    <!-- Tailwind CSS para responsividade e estilos rápidos -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf para gerar o PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         /* ====================================================================
-           ESTILOS FIXOS DO PDF (Usando tabelas para não quebrar no gerador)
+           VISUAL DA TELA (Como você vê no site)
            ==================================================================== */
+        .preview-container {
+            width: 100%;
+            overflow-x: auto;
+            background-color: #6b7280;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
         #pdf-content {
             font-family: Arial, sans-serif;
-            color: #333;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 20mm;
+            color: #000;
+            width: 210mm; /* Largura A4 */
+            min-height: 297mm; /* Altura A4 */
+            padding: 15mm;
             background: white;
             box-sizing: border-box;
             margin: 0 auto;
-            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        /* Tabelas "Invisíveis" para travar o layout lado a lado perfeitamente */
-        .layout-table {
+        table {
             width: 100%;
             border-collapse: collapse;
             border: none;
         }
-        .layout-table td {
-            border: none;
-            padding: 0;
-            vertical-align: top;
-        }
+        
+        td, th { vertical-align: top; }
 
-        /* Tabela dos Produtos (com bordas) */
-        .pdf-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 25px;
-        }
         .pdf-table th {
             background-color: #f3f4f6;
             text-align: left;
             padding: 10px;
-            border: 1px solid #d1d5db;
+            border: 1px solid #9ca3af;
             font-weight: bold;
             font-size: 14px;
-        }
-        .pdf-table td {
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            font-size: 14px;
+            color: #000;
         }
         
-        .quebra-pagina {
-            page-break-before: always;
-            margin-top: 20mm;
+        .pdf-table td {
+            padding: 10px;
+            border: 1px solid #9ca3af;
+            font-size: 14px;
+            color: #000;
         }
 
-        /* Responsividade para a prévia na tela */
-        @media screen and (max-width: 768px) {
-            .preview-container { overflow-x: auto; }
-            #pdf-content { width: 800px; min-height: auto; padding: 10mm; }
+        .quebra-pagina {
+            margin-top: 40px;
+        }
+
+        /* ====================================================================
+           SISTEMA DE IMPRESSÃO NATIVO (O segredo do PDF perfeito)
+           ==================================================================== */
+        @media print {
+            /* Força a impressão das cores de fundo (cinza na tabela, etc) */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Define o tamanho da folha como A4 real */
+            @page {
+                size: A4 portrait;
+                margin: 0; 
+            }
+
+            /* Esconde o formulário lateral e tudo que não for o orçamento */
+            .no-print {
+                display: none !important;
+            }
+
+            /* Ajusta o orçamento para ocupar 100% da folha impressa */
+            body, html {
+                background-color: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .preview-container {
+                padding: 0 !important;
+                background-color: transparent !important;
+                overflow: visible !important;
+                box-shadow: none !important;
+            }
+
+            #pdf-content {
+                width: 100% !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                padding: 15mm !important; /* Margem da folha impressa */
+                box-shadow: none !important;
+            }
+
+            /* Força a quebra de página visual exatamente onde precisamos */
+            .quebra-pagina {
+                page-break-before: always !important;
+                break-before: page !important;
+                padding-top: 15mm !important;
+            }
         }
     </style>
 </head>
@@ -77,8 +120,8 @@
 
     <div class="max-w-7xl mx-auto flex flex-col xl:flex-row gap-8">
         
-        <!-- Formulário de Entrada -->
-        <div class="w-full xl:w-1/3 bg-white p-6 rounded-lg shadow-md h-fit">
+        <!-- Formulário de Entrada (Ganha a classe "no-print" para sumir no PDF) -->
+        <div class="no-print w-full xl:w-1/3 bg-white p-6 rounded-lg shadow-md h-fit flex-shrink-0">
             <h2 class="text-2xl font-bold mb-4 text-blue-600">Dados do Orçamento</h2>
             
             <div class="space-y-4">
@@ -109,7 +152,7 @@
                 
                 <h3 class="font-bold text-lg">Serviços / Produtos</h3>
                 <div id="items-container" class="space-y-3 max-h-96 overflow-y-auto pr-2">
-                    <!-- Itens serão adicionados aqui via JS -->
+                    <!-- Itens via JS -->
                 </div>
                 <button onclick="addItem()" class="w-full bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded hover:bg-gray-300">
                     + Adicionar Item
@@ -117,7 +160,7 @@
 
                 <hr>
 
-                <!-- Cards de Seleção de Pagamento -->
+                <!-- Cards de Pagamento -->
                 <div>
                     <label class="block text-sm font-semibold mb-2">Condições de Pagamento</label>
                     <div id="cards-condicoes" class="flex flex-wrap gap-2"></div>
@@ -128,42 +171,42 @@
                     <div id="cards-formas" class="flex flex-wrap gap-2"></div>
                 </div>
 
-                <button id="btn-exportar" onclick="generatePDF()" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 mt-6 text-lg shadow-lg transition-colors">
-                    📄 Exportar para PDF
+                <button onclick="generatePDF()" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 mt-6 text-lg shadow-lg transition-colors flex justify-center items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Salvar / Imprimir PDF
                 </button>
             </div>
         </div>
 
         <!-- Área de Visualização do PDF -->
-        <div class="w-full xl:w-2/3 preview-container">
-            <div class="shadow-lg border" id="pdf-wrapper">
+        <div class="w-full xl:w-2/3 print-full">
+            <div class="preview-container">
                 
-                <!-- CONTEÚDO DO PDF -->
+                <!-- CONTEÚDO EXATO DO PDF -->
                 <div id="pdf-content">
                     
-                    <!-- 1. Cabeçalho Travado com Tabela -->
-                    <table class="layout-table" style="margin-bottom: 25px;">
+                    <!-- 1. Cabeçalho -->
+                    <table style="margin-bottom: 25px;">
                         <tr>
-                            <td style="width: 200px; vertical-align: middle;">
-                                <img src="logo.png" alt="Logo Empresa" style="max-width: 180px; max-height: 100px; object-fit: contain;" onerror="this.style.display='none'">
+                            <td style="width: 210px; vertical-align: middle;">
+                                <img src="logo.png" alt="Logo Empresa" style="max-width: 190px; max-height: 110px; object-fit: contain;" onerror="this.style.display='none'">
                             </td>
-                            <td style="vertical-align: middle; font-size: 14px; color: #4b5563; line-height: 1.4;">
-                                <h2 style="font-size: 20px; font-weight: bold; color: #000; margin: 0 0 5px 0;">AV COMERCIO DE VIDROS LTDA</h2>
+                            <td style="vertical-align: middle; font-size: 14px; color: #000; line-height: 1.5;">
+                                <h2 style="font-size: 20px; font-weight: bold; margin: 0 0 5px 0;">AV COMERCIO DE VIDROS LTDA</h2>
                                 <p style="margin: 0;">CNPJ: 44.610.589/0001-15</p>
-                                <!-- white-space: nowrap obriga a linha a não quebrar -->
                                 <p style="margin: 0; white-space: nowrap;">AVENIDA JATUARANA, 3634, SALA B, CONCEICAO, PORTO VELHO, RO</p>
                                 <p style="margin: 0;">CEP: 76808-426 | (69) 99325-1999 | Avvidrospvh@gmail.com</p>
                             </td>
                         </tr>
                     </table>
 
-                    <!-- 2. Título do Orçamento -->
-                    <div style="border-bottom: 2px solid #9ca3af; padding-bottom: 8px; margin-bottom: 25px;">
-                        <h1 style="font-size: 26px; font-weight: bold; text-transform: uppercase; margin: 0;">Orçamento</h1>
+                    <!-- 2. Título -->
+                    <div style="border-bottom: 2px solid #9ca3af; padding-bottom: 8px; margin-bottom: 20px;">
+                        <h1 style="font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 0; color: #000;">Orçamento</h1>
                     </div>
 
-                    <!-- 3. Dados do Cliente Travados com Tabela -->
-                    <table class="layout-table" style="margin-bottom: 25px; font-size: 15px; line-height: 1.6;">
+                    <!-- 3. Dados do Cliente -->
+                    <table style="margin-bottom: 25px; font-size: 15px; line-height: 1.6; color: #000;">
                         <tr>
                             <td style="width: 50%;">
                                 <p style="margin: 0;"><strong>Data:</strong> <span id="prev-data"></span></p>
@@ -177,22 +220,22 @@
                         </tr>
                     </table>
                     
-                    <p style="margin-bottom: 15px; font-size: 15px;">Aqui está o orçamento conforme solicitado:</p>
+                    <p style="margin-bottom: 15px; font-size: 15px; color: #000;">Aqui está o orçamento conforme solicitado:</p>
 
-                    <!-- 4. Contêiner Dinâmico para as Tabelas de Itens -->
+                    <!-- 4. Contêiner de Tabelas -->
                     <div id="dynamic-tables-container">
-                        <!-- Tabelas serão injetadas via JS -->
+                        <!-- Tabelas injetadas via JS -->
                     </div>
 
-                    <!-- 5. Rodapé de Valores Travado com Tabela -->
+                    <!-- 5. Rodapé de Totais -->
                     <div style="background-color: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; border-radius: 4px; margin-top: 25px;">
-                        <table class="layout-table">
+                        <table>
                             <tr>
-                                <td style="width: 60%; font-size: 15px;">
+                                <td style="width: 60%; font-size: 15px; color: #000;">
                                     <p style="margin: 0 0 5px 0;"><strong>Condições de pagamento:</strong> <span id="prev-condicoes">À vista</span></p>
                                     <p style="margin: 0;"><strong>Formas de pagamento:</strong> <span id="prev-formas">PIX, Dinheiro</span></p>
                                 </td>
-                                <td style="width: 40%; text-align: right;">
+                                <td style="width: 40%; text-align: right; color: #000;">
                                     <p style="margin: 0 0 5px 0; font-size: 16px;"><strong>Valor total:</strong> <span id="prev-total">R$ 0,00</span></p>
                                     <p style="margin: 0; font-size: 18px; font-weight: bold; border-top: 1px solid #d1d5db; padding-top: 8px; margin-top: 8px;">Valor final: <span id="prev-final">R$ 0,00</span></p>
                                 </td>
@@ -200,25 +243,22 @@
                         </table>
                     </div>
 
-                    <!-- 6. Paginação (Empurrada para o fim com margin-top) -->
-                    <div style="text-align: right; color: #6b7280; font-size: 14px; margin-top: 50px;">
+                    <!-- 6. Paginação -->
+                    <div style="text-align: right; color: #6b7280; font-size: 14px; margin-top: 30px;">
                         <span id="prev-page-num">Página 1/1</span>
                     </div>
 
                 </div>
-
             </div>
         </div>
 
     </div>
 
     <script>
-        // --- DADOS DA TABELA DE ITENS ---
         let items = [
             { descricao: 'Vidro incolor 6 mm', valor: 0.00, qtd: 1, unidade: 'un' }
         ];
 
-        // --- DADOS DOS CARDS DE PAGAMENTO ---
         const opcoesCondicoes = ['À vista', 'A prazo (15 dias)', 'A prazo (30 dias)', '50% Entrada + 50% Fim'];
         let condicaoSelecionada = 'À vista';
 
@@ -227,12 +267,10 @@
 
         const ITEMS_POR_PAGINA = 10;
 
-        // Formatador de Moeda
         const formatMoney = (value) => {
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
         };
 
-        // Inicialização ao carregar a página
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('input-data').valueAsDate = new Date();
             renderItems();
@@ -240,7 +278,6 @@
             updatePreview();
         });
 
-        // --- LÓGICA DOS ITENS ---
         function renderItems() {
             const container = document.getElementById('items-container');
             container.innerHTML = '';
@@ -265,7 +302,6 @@
             items.push({ descricao: '', valor: 0, qtd: 1, unidade: 'un' });
             renderItems();
             updatePreview();
-            
             const container = document.getElementById('items-container');
             container.scrollTop = container.scrollHeight;
         }
@@ -281,14 +317,11 @@
             updatePreview();
         }
 
-        // --- LÓGICA DOS CARDS DE PAGAMENTO ---
         function renderPaymentCards() {
             const containerCond = document.getElementById('cards-condicoes');
             containerCond.innerHTML = opcoesCondicoes.map(op => `
                 <button onclick="setCondicao('${op}')" class="px-3 py-1.5 text-sm font-medium border rounded-md transition-colors duration-200 ease-in-out
-                    ${condicaoSelecionada === op 
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}">
+                    ${condicaoSelecionada === op ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}">
                     ${op}
                 </button>
             `).join('');
@@ -296,20 +329,14 @@
             const containerFormas = document.getElementById('cards-formas');
             containerFormas.innerHTML = opcoesFormas.map(op => `
                 <button onclick="toggleForma('${op}')" class="px-3 py-1.5 text-sm font-medium border rounded-md transition-colors duration-200 ease-in-out
-                    ${formasSelecionadas.includes(op) 
-                        ? 'bg-green-600 text-white border-green-600 shadow-md' 
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}">
+                    ${formasSelecionadas.includes(op) ? 'bg-green-600 text-white border-green-600 shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}">
                     ${op}
                 </button>
             `).join('');
         }
 
-        function setCondicao(op) {
-            condicaoSelecionada = op;
-            renderPaymentCards();
-            updatePreview();
-        }
-
+        function setCondicao(op) { condicaoSelecionada = op; renderPaymentCards(); updatePreview(); }
+        
         function toggleForma(op) {
             if (formasSelecionadas.includes(op)) {
                 formasSelecionadas = formasSelecionadas.filter(f => f !== op);
@@ -320,33 +347,22 @@
             updatePreview();
         }
 
-        // --- ATUALIZAÇÃO DA PRÉVIA ---
         function updatePreview() {
-            // Atualizar data
             const rawDate = document.getElementById('input-data').value;
             if(rawDate) {
                 const [ano, mes, dia] = rawDate.split('-');
                 const dataObj = new Date(ano, mes - 1, dia);
-                const opcoes = { day: 'numeric', month: 'long', year: 'numeric' };
-                document.getElementById('prev-data').innerText = dataObj.toLocaleDateString('pt-BR', opcoes);
+                document.getElementById('prev-data').innerText = dataObj.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
             }
 
-            // Atualizar dados do cliente na prévia (com fallback caso esteja vazio)
-            const nomeCliente = document.getElementById('input-cliente').value || 'Nome do Cliente';
-            const cnpjCliente = document.getElementById('input-cnpj-cliente').value || '000.000.000-00';
-            const telefoneCliente = document.getElementById('input-telefone-cliente').value || 'Telefone de Contato';
-            const enderecoCliente = document.getElementById('input-endereco-cliente').value || 'Endereço Completo';
+            document.getElementById('prev-cliente-nome').innerText = document.getElementById('input-cliente').value || 'Nome do Cliente';
+            document.getElementById('prev-cliente-cnpj').innerText = document.getElementById('input-cnpj-cliente').value || '000.000.000-00';
+            document.getElementById('prev-cliente-telefone').innerText = document.getElementById('input-telefone-cliente').value || 'Telefone de Contato';
+            document.getElementById('prev-cliente-endereco').innerText = document.getElementById('input-endereco-cliente').value || 'Endereço Completo';
             
-            document.getElementById('prev-cliente-nome').innerText = nomeCliente;
-            document.getElementById('prev-cliente-cnpj').innerText = cnpjCliente;
-            document.getElementById('prev-cliente-telefone').innerText = telefoneCliente;
-            document.getElementById('prev-cliente-endereco').innerText = enderecoCliente;
-            
-            // Atualizar dados de pagamento
             document.getElementById('prev-condicoes').innerText = condicaoSelecionada;
             document.getElementById('prev-formas').innerText = formasSelecionadas.length > 0 ? formasSelecionadas.join(', ') : 'A combinar';
 
-            // Lógica de Paginação e Tabelas
             const containerTabelas = document.getElementById('dynamic-tables-container');
             containerTabelas.innerHTML = ''; 
             let totalGeral = 0;
@@ -357,18 +373,17 @@
             for (let i = 0; i < items.length; i += ITEMS_POR_PAGINA) {
                 const loteItens = items.slice(i, i + ITEMS_POR_PAGINA);
                 const isPrimeiraPagina = i === 0;
-
                 let linhasHTML = '';
+                
                 loteItens.forEach(item => {
                     const totalItem = item.valor * item.qtd;
                     totalGeral += totalItem;
-                    
                     linhasHTML += `
                         <tr>
-                            <td style="font-weight: bold;">${item.descricao || 'Item sem descrição'}</td>
-                            <td>${formatMoney(item.valor)}</td>
-                            <td>${item.qtd} ${item.unidade}</td>
-                            <td>${formatMoney(totalItem)}</td>
+                            <td style="font-weight: bold; color: #000;">${item.descricao || 'Item sem descrição'}</td>
+                            <td style="color: #000;">${formatMoney(item.valor)}</td>
+                            <td style="color: #000;">${item.qtd} ${item.unidade}</td>
+                            <td style="color: #000;">${formatMoney(totalItem)}</td>
                         </tr>
                     `;
                 });
@@ -400,35 +415,10 @@
             document.getElementById('prev-final').innerText = formatMoney(totalGeral);
         }
 
-        // --- GERAÇÃO DO PDF ---
+        // AGORA USAMOS A FUNÇÃO NATIVA DO NAVEGADOR (100% livre de bugs)
         function generatePDF() {
-            const element = document.getElementById('pdf-content');
-            const nomeCliente = document.getElementById('input-cliente').value || 'Cliente';
-            const btn = document.getElementById('btn-exportar');
-            
-            btn.innerText = "⏳ Gerando PDF...";
-            btn.disabled = true;
-            btn.classList.replace('bg-blue-600', 'bg-gray-400');
-            
-            const opt = {
-                margin:       0,
-                filename:     `Orcamento_${nomeCliente}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                pagebreak:    { mode: 'css', before: '.quebra-pagina' },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                btn.innerText = "📄 Exportar para PDF";
-                btn.disabled = false;
-                btn.classList.replace('bg-gray-400', 'bg-blue-600');
-            }).catch(err => {
-                console.error(err);
-                btn.innerText = "📄 Exportar para PDF";
-                btn.disabled = false;
-                btn.classList.replace('bg-gray-400', 'bg-blue-600');
-            });
+            // Abre a tela de impressão do navegador (onde o usuário escolhe "Salvar como PDF")
+            window.print();
         }
     </script>
 </body>
