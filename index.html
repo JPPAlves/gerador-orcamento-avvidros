@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Orçamento - AV Comércio de Vidros</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563EB'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/></svg>" type="image/svg+xml">    <!-- Tailwind CSS para responsividade e estilos rápidos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2pdf para gerar o PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Estilos específicos para o documento do PDF */
+        #pdf-content {
+            font-family: Arial, sans-serif;
+            color: #333;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            background: white;
+            box-sizing: border-box;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .pdf-main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pdf-table th {
+            background-color: #f3f4f6;
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            font-weight: bold;
+        }
+        .pdf-table td {
+            padding: 8px;
+            border: 1px solid #d1d5db;
+        }
+        
+        /* Classe que o html2pdf usa para forçar a quebra de página */
+        .quebra-pagina {
+            page-break-before: always;
+            margin-top: 20mm;
+        }
+
+        /* Garantir que a tela do PDF se adapte no mobile apenas para visualização */
+        @media screen and (max-width: 768px) {
+            .preview-container {
+                overflow-x: auto;
+            }
+            #pdf-content {
+                width: 800px;
+                min-height: auto;
+                padding: 10mm;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto flex flex-col xl:flex-row gap-8">
+        
+        <!-- Formulário de Entrada -->
+        <div class="w-full xl:w-1/3 bg-white p-6 rounded-lg shadow-md h-fit">
+            <h2 class="text-2xl font-bold mb-4 text-blue-600">Dados do Orçamento</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Data</label>
+                    <input type="date" id="input-data" class="w-full border rounded p-2" onchange="updatePreview()">
+                </div>
+                
+                <h3 class="font-bold text-lg mt-4 border-t pt-4">Dados do Cliente</h3>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Nome / Razão Social</label>
+                    <input type="text" id="input-cliente" placeholder="Ex: João da Silva" class="w-full border rounded p-2" oninput="updatePreview()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">CNPJ / CPF</label>
+                    <input type="text" id="input-cnpj-cliente" placeholder="Ex: 000.000.000-00" class="w-full border rounded p-2" oninput="updatePreview()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Contato (Telefone/WhatsApp)</label>
+                    <input type="text" id="input-telefone-cliente" placeholder="Ex: (69) 99999-9999" class="w-full border rounded p-2" oninput="updatePreview()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Endereço Completo</label>
+                    <textarea id="input-endereco-cliente" placeholder="Ex: Rua das Flores, 123, Centro - Porto Velho, RO" class="w-full border rounded p-2 text-sm" rows="2" oninput="updatePreview()"></textarea>
+                </div>
+                
+                <hr>
+                
+                <h3 class="font-bold text-lg">Serviços / Produtos</h3>
+                <div id="items-container" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    <!-- Itens serão adicionados aqui via JS -->
+                </div>
+                <button onclick="addItem()" class="w-full bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded hover:bg-gray-300">
+                    + Adicionar Item
+                </button>
+
+                <hr>
+
+                <!-- Cards de Seleção de Pagamento -->
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Condições de Pagamento</label>
+                    <div id="cards-condicoes" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="pt-2">
+                    <label class="block text-sm font-semibold mb-2">Formas de Pagamento</label>
+                    <div id="cards-formas" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <button id="btn-exportar" onclick="generatePDF()" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded hover:bg-blue-700 mt-6 text-lg shadow-lg transition-colors">
+                    📄 Exportar para PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de Visualização do PDF -->
+        <div class="w-full xl:w-2/3 preview-container">
+            <div class="shadow-lg border" id="pdf-wrapper">
+                <!-- Este é o contêiner que será convertido em PDF -->
+                <div id="pdf-content">
+                    
+                    <div class="pdf-main-content">
+                        <!-- Cabeçalho -->
+                        <div class="flex items-center gap-4 mb-8 w-full overflow-hidden">
+                            <div class="w-48 h-28 flex-shrink-0 flex justify-start items-center">
+                                <!-- Imagem da Logo Aqui -->
+                                <img src="logo.png" alt="Logo Empresa" class="max-w-full max-h-full object-contain">
+                            </div>
+                            <div class="text-gray-600 text-[14px] leading-snug tracking-wide flex-1">
+                                <p class="font-bold text-xl text-black mb-1">AV COMERCIO DE VIDROS LTDA</p>
+                                <p>CNPJ: 44.610.589/0001-15</p>
+                                <p>AVENIDA JATUARANA, 3634, SALA B, CONCEICAO, PORTO VELHO, RO</p>
+                                <p>CEP: 76808-426 | (69) 99325-1999 | Avvidrospvh@gmail.com</p>
+                            </div>
+                        </div>
+
+                        <!-- Título do Orçamento -->
+                        <div class="border-b-2 border-gray-400 pb-2 mb-4">
+                            <h1 class="text-3xl font-bold uppercase tracking-wide">Orçamento</h1>
+                        </div>
+
+                        <!-- Dados do Cliente Lado a Lado -->
+                        <div class="mb-6 flex flex-row justify-between gap-4 text-base leading-relaxed">
+                            <div class="w-1/2">
+                                <p><strong>Data:</strong> <span id="prev-data"></span></p>
+                                <p><strong>Cliente:</strong> <span id="prev-cliente-nome">Nome do Cliente</span></p>
+                                <p><strong>CNPJ/CPF:</strong> <span id="prev-cliente-cnpj">000.000.000-00</span></p>
+                            </div>
+                            <div class="w-1/2">
+                                <p><strong>Contato:</strong> <span id="prev-cliente-telefone">Telefone de Contato</span></p>
+                                <p><strong>Endereço:</strong> <span id="prev-cliente-endereco">Endereço Completo</span></p>
+                            </div>
+                        </div>
+                        
+                        <p class="mb-4">Aqui está o orçamento conforme solicitado:</p>
+
+                        <!-- Contêiner Dinâmico para as Tabelas -->
+                        <div id="dynamic-tables-container">
+                            <!-- Tabelas serão injetadas via JS -->
+                        </div>
+
+                        <!-- Rodapé de Valores -->
+                        <div class="flex justify-between mt-6 bg-gray-50 p-4 border border-gray-200 rounded">
+                            <div class="w-2/3 pr-4">
+                                <p class="mb-1"><strong>Condições de pagamento:</strong> <span id="prev-condicoes">À vista</span></p>
+                                <p><strong>Formas de pagamento:</strong> <span id="prev-formas">PIX, Dinheiro, Cartão de Débito</span></p>
+                            </div>
+                            <div class="text-right w-1/3">
+                                <p class="mb-1 text-lg"><strong>Valor total:</strong> <span id="prev-total">R$ 0,00</span></p>
+                                <p class="text-xl font-bold text-gray-900 mt-2 border-t pt-2 border-gray-300">Valor final: <span id="prev-final">R$ 0,00</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Paginação no final da página (mt-auto empurra pro fim) -->
+                        <div class="mt-auto text-right text-gray-500 text-sm w-full pt-8 pb-2">
+                            <span id="prev-page-num">Página 1/1</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DADOS DA TABELA DE ITENS ---
+        let items = [
+            { descricao: 'Vidro incolor 6 mm', valor: 0.00, qtd: 1, unidade: 'un' }
+        ];
+
+        // --- DADOS DOS CARDS DE PAGAMENTO ---
+        const opcoesCondicoes = ['À vista', 'A prazo (15 dias)', 'A prazo (30 dias)', '50% Entrada + 50% Fim'];
+        let condicaoSelecionada = 'À vista';
+
+        const opcoesFormas = ['PIX', 'Dinheiro', 'Cartão de Débito', 'Cartão de Crédito', 'Boleto', 'Transferência'];
+        let formasSelecionadas = ['PIX', 'Dinheiro'];
+
+        const ITEMS_POR_PAGINA = 10;
+
+        // Formatador de Moeda
+        const formatMoney = (value) => {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        };
+
+        // Inicialização ao carregar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('input-data').valueAsDate = new Date();
+            renderItems();
+            renderPaymentCards();
+            updatePreview();
+        });
+
+        // --- LÓGICA DOS ITENS ---
+        function renderItems() {
+            const container = document.getElementById('items-container');
+            container.innerHTML = '';
+            
+            items.forEach((item, index) => {
+                container.innerHTML += `
+                    <div class="bg-gray-50 p-3 rounded border border-gray-200 relative shadow-sm">
+                        <button onclick="removeItem(${index})" class="absolute top-2 right-2 text-red-500 font-bold text-sm bg-red-100 px-2 rounded hover:bg-red-200">X</button>
+                        <p class="text-xs text-gray-500 font-bold mb-1">Item ${index + 1}</p>
+                        <input type="text" placeholder="Ex: Vidro temperado 8mm" value="${item.descricao}" oninput="updateItem(${index}, 'descricao', this.value)" class="w-full border rounded p-2 mb-2 text-sm focus:ring focus:ring-blue-200 outline-none">
+                        <div class="flex gap-2">
+                            <input type="number" placeholder="Valor" value="${item.valor}" oninput="updateItem(${index}, 'valor', this.value)" class="w-1/3 border rounded p-2 text-sm focus:ring focus:ring-blue-200 outline-none">
+                            <input type="number" placeholder="Qtd" value="${item.qtd}" oninput="updateItem(${index}, 'qtd', this.value)" class="w-1/4 border rounded p-2 text-sm focus:ring focus:ring-blue-200 outline-none">
+                            <input type="text" placeholder="Unid." value="${item.unidade}" oninput="updateItem(${index}, 'unidade', this.value)" class="w-1/4 border rounded p-2 text-sm focus:ring focus:ring-blue-200 outline-none">
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function addItem() {
+            items.push({ descricao: '', valor: 0, qtd: 1, unidade: 'un' });
+            renderItems();
+            updatePreview();
+            
+            const container = document.getElementById('items-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeItem(index) {
+            items.splice(index, 1);
+            renderItems();
+            updatePreview();
+        }
+
+        function updateItem(index, field, value) {
+            items[index][field] = field === 'valor' || field === 'qtd' ? parseFloat(value) || 0 : value;
+            updatePreview();
+        }
+
+        // --- LÓGICA DOS CARDS DE PAGAMENTO ---
+        function renderPaymentCards() {
+            const containerCond = document.getElementById('cards-condicoes');
+            containerCond.innerHTML = opcoesCondicoes.map(op => `
+                <button onclick="setCondicao('${op}')" class="px-3 py-1.5 text-sm font-medium border rounded-md transition-colors duration-200 ease-in-out
+                    ${condicaoSelecionada === op 
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}">
+                    ${op}
+                </button>
+            `).join('');
+
+            const containerFormas = document.getElementById('cards-formas');
+            containerFormas.innerHTML = opcoesFormas.map(op => `
+                <button onclick="toggleForma('${op}')" class="px-3 py-1.5 text-sm font-medium border rounded-md transition-colors duration-200 ease-in-out
+                    ${formasSelecionadas.includes(op) 
+                        ? 'bg-green-600 text-white border-green-600 shadow-md' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}">
+                    ${op}
+                </button>
+            `).join('');
+        }
+
+        function setCondicao(op) {
+            condicaoSelecionada = op;
+            renderPaymentCards();
+            updatePreview();
+        }
+
+        function toggleForma(op) {
+            if (formasSelecionadas.includes(op)) {
+                formasSelecionadas = formasSelecionadas.filter(f => f !== op);
+            } else {
+                formasSelecionadas.push(op);
+            }
+            renderPaymentCards();
+            updatePreview();
+        }
+
+        // --- ATUALIZAÇÃO DA PRÉVIA COM QUEBRA DE PÁGINA ---
+        function updatePreview() {
+            // Atualizar data
+            const rawDate = document.getElementById('input-data').value;
+            if(rawDate) {
+                const [ano, mes, dia] = rawDate.split('-');
+                const dataObj = new Date(ano, mes - 1, dia);
+                const opcoes = { day: 'numeric', month: 'long', year: 'numeric' };
+                document.getElementById('prev-data').innerText = dataObj.toLocaleDateString('pt-BR', opcoes);
+            }
+
+            // Atualizar dados do cliente na prévia (com fallback caso esteja vazio)
+            const nomeCliente = document.getElementById('input-cliente').value || 'Nome do Cliente';
+            const cnpjCliente = document.getElementById('input-cnpj-cliente').value || '000.000.000-00';
+            const telefoneCliente = document.getElementById('input-telefone-cliente').value || 'Telefone de Contato';
+            const enderecoCliente = document.getElementById('input-endereco-cliente').value || 'Endereço Completo';
+            
+            document.getElementById('prev-cliente-nome').innerText = nomeCliente;
+            document.getElementById('prev-cliente-cnpj').innerText = cnpjCliente;
+            document.getElementById('prev-cliente-telefone').innerText = telefoneCliente;
+            document.getElementById('prev-cliente-endereco').innerText = enderecoCliente;
+            
+            // Atualizar dados de pagamento
+            document.getElementById('prev-condicoes').innerText = condicaoSelecionada;
+            document.getElementById('prev-formas').innerText = formasSelecionadas.length > 0 ? formasSelecionadas.join(', ') : 'A combinar';
+
+            // Lógica de Paginação e Tabelas
+            const containerTabelas = document.getElementById('dynamic-tables-container');
+            containerTabelas.innerHTML = ''; 
+            let totalGeral = 0;
+            
+            // Cálculo do total de páginas
+            const totalPaginas = Math.max(1, Math.ceil(items.length / ITEMS_POR_PAGINA));
+            document.getElementById('prev-page-num').innerText = `Página ${totalPaginas}/${totalPaginas}`;
+
+            // Divide os itens em blocos de até 10
+            for (let i = 0; i < items.length; i += ITEMS_POR_PAGINA) {
+                const loteItens = items.slice(i, i + ITEMS_POR_PAGINA);
+                const isPrimeiraPagina = i === 0;
+
+                let linhasHTML = '';
+                loteItens.forEach(item => {
+                    const totalItem = item.valor * item.qtd;
+                    totalGeral += totalItem;
+                    
+                    linhasHTML += `
+                        <tr>
+                            <td class="font-semibold text-sm">${item.descricao || 'Item sem descrição'}</td>
+                            <td class="text-sm">${formatMoney(item.valor)}</td>
+                            <td class="text-sm">${item.qtd} ${item.unidade}</td>
+                            <td class="text-sm">${formatMoney(totalItem)}</td>
+                        </tr>
+                    `;
+                });
+
+                const classeQuebra = isPrimeiraPagina ? '' : 'quebra-pagina';
+                const textoContinuacao = isPrimeiraPagina ? '' : '<p class="text-xs text-gray-500 mb-1 italic">Continuação dos itens...</p>';
+
+                containerTabelas.innerHTML += `
+                    <div class="${classeQuebra}">
+                        ${textoContinuacao}
+                        <table class="w-full pdf-table mb-6 border-collapse">
+                            <thead>
+                                <tr>
+                                    <th class="w-1/2 text-sm">DESCRIÇÃO</th>
+                                    <th class="w-1/6 text-sm">VALOR</th>
+                                    <th class="w-1/6 text-sm">QTD</th>
+                                    <th class="w-1/6 text-sm">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${linhasHTML}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            // Atualizar Totais Finais
+            document.getElementById('prev-total').innerText = formatMoney(totalGeral);
+            document.getElementById('prev-final').innerText = formatMoney(totalGeral);
+        }
+
+        // --- GERAÇÃO DO PDF COM TRATAMENTO DE ERRO ---
+        function generatePDF() {
+            const element = document.getElementById('pdf-content');
+            const nomeCliente = document.getElementById('input-cliente').value || 'Cliente';
+            const btn = document.getElementById('btn-exportar');
+            
+            // Efeito visual no botão enquanto gera
+            btn.innerText = "⏳ Gerando PDF...";
+            btn.disabled = true;
+            btn.classList.replace('bg-blue-600', 'bg-gray-400');
+            
+            const opt = {
+                margin:       0,
+                filename:     `Orcamento_${nomeCliente}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                pagebreak:    { mode: 'css', before: '.quebra-pagina' },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Gera e salva. Se falhar no computador local por causa da imagem, avisa o usuário.
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerText = "📄 Exportar para PDF";
+                btn.disabled = false;
+                btn.classList.replace('bg-gray-400', 'bg-blue-600');
+            }).catch(err => {
+                console.error(err);
+                alert("Erro ao gerar o PDF. Se você estiver abrindo o arquivo direto do seu computador, o navegador bloqueia a leitura da logo (CORS). Isso será resolvido automaticamente quando você hospedar o site no GitHub!");
+                btn.innerText = "📄 Exportar para PDF";
+                btn.disabled = false;
+                btn.classList.replace('bg-gray-400', 'bg-blue-600');
+            });
+        }
+    </script>
+</body>
+</html>
