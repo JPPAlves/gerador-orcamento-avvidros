@@ -15,7 +15,7 @@
     
     <style>
         /* ====================================================================
-           ESTILOS FIXOS DO PDF (Isso garante que não quebre na hora de exportar)
+           ESTILOS FIXOS DO PDF (Usando tabelas para não quebrar no gerador)
            ==================================================================== */
         #pdf-content {
             font-family: Arial, sans-serif;
@@ -27,72 +27,21 @@
             box-sizing: border-box;
             margin: 0 auto;
             position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .pdf-main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* Estrutura do Cabeçalho Segura para PDF */
-        .pdf-header-fixo {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 30px;
+        /* Tabelas "Invisíveis" para travar o layout lado a lado perfeitamente */
+        .layout-table {
             width: 100%;
+            border-collapse: collapse;
+            border: none;
         }
-        .pdf-logo-fixo {
-            width: 180px;
-            height: 100px;
-            margin-right: 20px;
-            display: flex;
-            align-items: center;
-        }
-        .pdf-logo-fixo img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        .pdf-empresa-fixo {
-            flex: 1;
-            font-size: 14px;
-            color: #4b5563;
-            line-height: 1.4;
-        }
-        .pdf-empresa-fixo h2 {
-            font-size: 20px;
-            font-weight: bold;
-            color: #000;
-            margin: 0 0 5px 0;
-        }
-        .pdf-empresa-fixo p { margin: 0; }
-
-        /* Titulo Orçamento */
-        .pdf-titulo-fixo {
-            border-bottom: 2px solid #9ca3af;
-            padding-bottom: 8px;
-            margin-bottom: 20px;
-            font-size: 26px;
-            font-weight: bold;
-            text-transform: uppercase;
+        .layout-table td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
         }
 
-        /* Dados do Cliente Seguros para PDF */
-        .pdf-cliente-fixo {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 25px;
-            font-size: 15px;
-            line-height: 1.6;
-            width: 100%;
-        }
-        .pdf-cliente-coluna { width: 48%; }
-        .pdf-cliente-coluna p { margin: 0; }
-
-        /* Tabela Segura para PDF */
+        /* Tabela dos Produtos (com bordas) */
         .pdf-table {
             width: 100%;
             border-collapse: collapse;
@@ -112,28 +61,12 @@
             font-size: 14px;
         }
         
-        /* Rodapé de Valores Seguro para PDF */
-        .pdf-totais-fixo {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 25px;
-            background-color: #f9fafb;
-            padding: 15px;
-            border: 1px solid #e5e7eb;
-            border-radius: 4px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .pdf-totais-col1 { width: 60%; }
-        .pdf-totais-col2 { width: 35%; text-align: right; }
-        .pdf-totais-fixo p { margin: 0 0 5px 0; }
-        
         .quebra-pagina {
             page-break-before: always;
             margin-top: 20mm;
         }
 
-        /* Responsividade para a tela (não afeta o PDF) */
+        /* Responsividade para a prévia na tela */
         @media screen and (max-width: 768px) {
             .preview-container { overflow-x: auto; }
             #pdf-content { width: 800px; min-height: auto; padding: 10mm; }
@@ -205,66 +138,73 @@
         <div class="w-full xl:w-2/3 preview-container">
             <div class="shadow-lg border" id="pdf-wrapper">
                 
-                <!-- ESTE É O CONTEÚDO QUE VAI PARA O PDF (Totalmente reestruturado) -->
+                <!-- CONTEÚDO DO PDF -->
                 <div id="pdf-content">
-                    <div class="pdf-main-content">
-                        
-                        <!-- Cabeçalho Fixo -->
-                        <div class="pdf-header-fixo">
-                            <div class="pdf-logo-fixo">
-                                <!-- Certifique-se que o arquivo chama "logo.png" no GitHub -->
-                                <img src="logo.png" alt="Logo Empresa" onerror="this.style.display='none'">
-                            </div>
-                            <div class="pdf-empresa-fixo">
-                                <h2>AV COMERCIO DE VIDROS LTDA</h2>
-                                <p>CNPJ: 44.610.589/0001-15</p>
-                                <p>AVENIDA JATUARANA, 3634, SALA B, CONCEICAO, PORTO VELHO, RO</p>
-                                <p>CEP: 76808-426 | (69) 99325-1999 | Avvidrospvh@gmail.com</p>
-                            </div>
-                        </div>
+                    
+                    <!-- 1. Cabeçalho Travado com Tabela -->
+                    <table class="layout-table" style="margin-bottom: 25px;">
+                        <tr>
+                            <td style="width: 200px; vertical-align: middle;">
+                                <img src="logo.png" alt="Logo Empresa" style="max-width: 180px; max-height: 100px; object-fit: contain;" onerror="this.style.display='none'">
+                            </td>
+                            <td style="vertical-align: middle; font-size: 14px; color: #4b5563; line-height: 1.4;">
+                                <h2 style="font-size: 20px; font-weight: bold; color: #000; margin: 0 0 5px 0;">AV COMERCIO DE VIDROS LTDA</h2>
+                                <p style="margin: 0;">CNPJ: 44.610.589/0001-15</p>
+                                <!-- white-space: nowrap obriga a linha a não quebrar -->
+                                <p style="margin: 0; white-space: nowrap;">AVENIDA JATUARANA, 3634, SALA B, CONCEICAO, PORTO VELHO, RO</p>
+                                <p style="margin: 0;">CEP: 76808-426 | (69) 99325-1999 | Avvidrospvh@gmail.com</p>
+                            </td>
+                        </tr>
+                    </table>
 
-                        <!-- Título do Orçamento -->
-                        <div class="pdf-titulo-fixo">
-                            Orçamento
-                        </div>
-
-                        <!-- Dados do Cliente Fixo -->
-                        <div class="pdf-cliente-fixo">
-                            <div class="pdf-cliente-coluna">
-                                <p><strong>Data:</strong> <span id="prev-data"></span></p>
-                                <p><strong>Cliente:</strong> <span id="prev-cliente-nome">Nome do Cliente</span></p>
-                                <p><strong>CNPJ/CPF:</strong> <span id="prev-cliente-cnpj">000.000.000-00</span></p>
-                            </div>
-                            <div class="pdf-cliente-coluna">
-                                <p><strong>Contato:</strong> <span id="prev-cliente-telefone">Telefone de Contato</span></p>
-                                <p><strong>Endereço:</strong> <span id="prev-cliente-endereco">Endereço Completo</span></p>
-                            </div>
-                        </div>
-                        
-                        <p style="margin-bottom: 15px;">Aqui está o orçamento conforme solicitado:</p>
-
-                        <!-- Contêiner Dinâmico para as Tabelas -->
-                        <div id="dynamic-tables-container">
-                            <!-- Tabelas serão injetadas via JS -->
-                        </div>
-
-                        <!-- Rodapé de Valores Fixo -->
-                        <div class="pdf-totais-fixo">
-                            <div class="pdf-totais-col1">
-                                <p><strong>Condições de pagamento:</strong> <span id="prev-condicoes">À vista</span></p>
-                                <p><strong>Formas de pagamento:</strong> <span id="prev-formas">PIX, Dinheiro</span></p>
-                            </div>
-                            <div class="pdf-totais-col2">
-                                <p style="font-size: 16px;"><strong>Valor total:</strong> <span id="prev-total">R$ 0,00</span></p>
-                                <p style="font-size: 18px; font-weight: bold; border-top: 1px solid #d1d5db; padding-top: 8px; margin-top: 8px;">Valor final: <span id="prev-final">R$ 0,00</span></p>
-                            </div>
-                        </div>
-
-                        <!-- Paginação -->
-                        <div style="margin-top: auto; text-align: right; color: #6b7280; font-size: 14px; padding-top: 30px;">
-                            <span id="prev-page-num">Página 1/1</span>
-                        </div>
+                    <!-- 2. Título do Orçamento -->
+                    <div style="border-bottom: 2px solid #9ca3af; padding-bottom: 8px; margin-bottom: 25px;">
+                        <h1 style="font-size: 26px; font-weight: bold; text-transform: uppercase; margin: 0;">Orçamento</h1>
                     </div>
+
+                    <!-- 3. Dados do Cliente Travados com Tabela -->
+                    <table class="layout-table" style="margin-bottom: 25px; font-size: 15px; line-height: 1.6;">
+                        <tr>
+                            <td style="width: 50%;">
+                                <p style="margin: 0;"><strong>Data:</strong> <span id="prev-data"></span></p>
+                                <p style="margin: 0;"><strong>Cliente:</strong> <span id="prev-cliente-nome">Nome do Cliente</span></p>
+                                <p style="margin: 0;"><strong>CNPJ/CPF:</strong> <span id="prev-cliente-cnpj">000.000.000-00</span></p>
+                            </td>
+                            <td style="width: 50%;">
+                                <p style="margin: 0;"><strong>Contato:</strong> <span id="prev-cliente-telefone">Telefone de Contato</span></p>
+                                <p style="margin: 0;"><strong>Endereço:</strong> <span id="prev-cliente-endereco">Endereço Completo</span></p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <p style="margin-bottom: 15px; font-size: 15px;">Aqui está o orçamento conforme solicitado:</p>
+
+                    <!-- 4. Contêiner Dinâmico para as Tabelas de Itens -->
+                    <div id="dynamic-tables-container">
+                        <!-- Tabelas serão injetadas via JS -->
+                    </div>
+
+                    <!-- 5. Rodapé de Valores Travado com Tabela -->
+                    <div style="background-color: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; border-radius: 4px; margin-top: 25px;">
+                        <table class="layout-table">
+                            <tr>
+                                <td style="width: 60%; font-size: 15px;">
+                                    <p style="margin: 0 0 5px 0;"><strong>Condições de pagamento:</strong> <span id="prev-condicoes">À vista</span></p>
+                                    <p style="margin: 0;"><strong>Formas de pagamento:</strong> <span id="prev-formas">PIX, Dinheiro</span></p>
+                                </td>
+                                <td style="width: 40%; text-align: right;">
+                                    <p style="margin: 0 0 5px 0; font-size: 16px;"><strong>Valor total:</strong> <span id="prev-total">R$ 0,00</span></p>
+                                    <p style="margin: 0; font-size: 18px; font-weight: bold; border-top: 1px solid #d1d5db; padding-top: 8px; margin-top: 8px;">Valor final: <span id="prev-final">R$ 0,00</span></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- 6. Paginação (Empurrada para o fim com margin-top) -->
+                    <div style="text-align: right; color: #6b7280; font-size: 14px; margin-top: 50px;">
+                        <span id="prev-page-num">Página 1/1</span>
+                    </div>
+
                 </div>
 
             </div>
@@ -391,7 +331,7 @@
                 document.getElementById('prev-data').innerText = dataObj.toLocaleDateString('pt-BR', opcoes);
             }
 
-            // Atualizar dados do cliente na prévia
+            // Atualizar dados do cliente na prévia (com fallback caso esteja vazio)
             const nomeCliente = document.getElementById('input-cliente').value || 'Nome do Cliente';
             const cnpjCliente = document.getElementById('input-cnpj-cliente').value || '000.000.000-00';
             const telefoneCliente = document.getElementById('input-telefone-cliente').value || 'Telefone de Contato';
