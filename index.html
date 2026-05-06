@@ -3,30 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerador de Orçamento</title>
-
-<link rel="icon" href="./logo.png">
+<title>Orçamento</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
+* {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
 .preview-container {
-    width: 100%;
     overflow-x: auto;
-    background-color: #6b7280;
+    background: #6b7280;
     padding: 20px;
-    border-radius: 8px;
 }
 
 #pdf-content {
-    font-family: Arial, sans-serif;
     width: 794px;
     min-height: 1123px;
+    background: #fff;
     padding: 40px;
-    background: white;
-    margin: 0 auto;
-    box-sizing: border-box;
+    margin: auto;
+    font-family: Arial;
 }
 
 table {
@@ -34,15 +34,9 @@ table {
     border-collapse: collapse;
 }
 
-.pdf-table th {
-    background-color: #f3f4f6;
-    padding: 10px;
+th, td {
     border: 1px solid #ccc;
-}
-
-.pdf-table td {
-    padding: 10px;
-    border: 1px solid #ccc;
+    padding: 8px;
 }
 
 .quebra-pagina {
@@ -54,28 +48,36 @@ table {
 
 <body class="bg-gray-100 p-6">
 
-<div class="flex flex-col xl:flex-row gap-6">
+<div class="flex gap-6">
 
 <!-- FORM -->
-<div class="bg-white p-4 rounded shadow w-full xl:w-1/3">
-<input id="cliente" placeholder="Nome cliente" class="w-full border p-2 mb-2">
-<button onclick="addItem()" class="bg-gray-200 w-full p-2 mb-2">+ Item</button>
-<button onclick="generatePDF()" class="bg-blue-600 text-white w-full p-3">Gerar PDF</button>
+<div class="bg-white p-4 rounded shadow w-1/3">
+<input id="cliente" placeholder="Cliente" class="w-full border p-2 mb-2">
+
+<button onclick="addItem()" class="bg-gray-200 w-full p-2 mb-2">
++ Item
+</button>
+
+<button onclick="generatePDF()" id="btn" class="bg-blue-600 text-white w-full p-3">
+Gerar PDF
+</button>
 </div>
 
 <!-- PREVIEW -->
-<div class="w-full xl:w-2/3">
+<div class="w-2/3">
 <div class="preview-container">
 
 <div id="pdf-content">
 
 <h1 style="font-size:22px;font-weight:bold;">ORÇAMENTO</h1>
 
-<p><strong>Cliente:</strong> <span id="prev-cliente"></span></p>
+<p><strong>Cliente:</strong> <span id="prevCliente"></span></p>
 
 <div id="tabela"></div>
 
-<p style="margin-top:20px;"><strong>Total:</strong> <span id="total"></span></p>
+<p style="margin-top:20px;">
+<strong>Total:</strong> <span id="total"></span>
+</p>
 
 </div>
 
@@ -88,15 +90,15 @@ table {
 let items = [];
 
 function addItem(){
-    items.push({desc:"Item", valor:100});
+    items.push({desc:"Produto", valor:100});
     render();
 }
 
 function render(){
-    document.getElementById('prev-cliente').innerText =
+    document.getElementById('prevCliente').innerText =
         document.getElementById('cliente').value;
 
-    let html = '<table class="pdf-table"><tr><th>Item</th><th>Valor</th></tr>';
+    let html = "<table><tr><th>Item</th><th>Valor</th></tr>";
     let total = 0;
 
     items.forEach(i=>{
@@ -104,25 +106,55 @@ function render(){
         total += i.valor;
     });
 
-    html += '</table>';
+    html += "</table>";
 
     document.getElementById('tabela').innerHTML = html;
     document.getElementById('total').innerText = total;
 }
 
 function generatePDF(){
-    const element = document.getElementById('pdf-content');
+    const original = document.getElementById('pdf-content');
+    const btn = document.getElementById('btn');
+
+    btn.innerText = "Gerando...";
+    btn.disabled = true;
+
+    // 🔥 CLONAR CONTEÚDO
+    const clone = original.cloneNode(true);
+
+    clone.style.width = "794px";
+    clone.style.minHeight = "1123px";
+    clone.style.margin = "0";
+    clone.style.padding = "40px";
+
+    // 🔥 CONTAINER OCULTO
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.appendChild(clone);
+    document.body.appendChild(container);
 
     const opt = {
         margin: 0,
         filename: 'orcamento.pdf',
         image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 3, useCORS: true },
-        jsPDF: { unit: 'px', format: [794,1123] },
+        html2canvas: {
+            scale: 2,
+            useCORS: true
+        },
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        },
         pagebreak: { mode: ['css','legacy'] }
     };
 
-    html2pdf().set(opt).from(element).save();
+    html2pdf().set(opt).from(clone).save().then(()=>{
+        document.body.removeChild(container);
+        btn.innerText = "Gerar PDF";
+        btn.disabled = false;
+    });
 }
 </script>
 
